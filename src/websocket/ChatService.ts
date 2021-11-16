@@ -1,7 +1,10 @@
 import { container } from 'tsyringe';
 import { io } from '../http';
+import { CreateChatRoomService } from '../services/CreateChatRoomService';
 import { CreateUserService } from '../services/CreateUserService';
 import { GetAllUsersService } from '../services/GetAllUsersService';
+import { GetChatRoomByUsersService } from '../services/GetChatRoomByUsersService';
+import { GetUserBySocketIdService } from '../services/GetUserBySocketIdService';
 
 //emit = enviar informação para o cliente
 // io.emit = enviar pata todos os usuários
@@ -30,4 +33,17 @@ io.on('connect', socket => {
         console.log(users);
         callback(users);
     });
+    socket.on("start_chat", async (data, callback) => {
+        const createChatRoomService = container.resolve(CreateChatRoomService);
+        const getUSerBySocketIdService = container.resolve(GetUserBySocketIdService);
+        const getChatRoomByUsersService = container.resolve(GetChatRoomByUsersService);
+        const userLogged = await getUSerBySocketIdService.execute(socket.id);
+
+        let room = await getChatRoomByUsersService.execute([data.idUser, userLogged._id]);
+
+        if (!room) {
+            room = await createChatRoomService.execute([data.idUser, userLogged._id]);
+        }
+        callback(room);
+    })
 });
