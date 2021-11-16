@@ -2,10 +2,10 @@ import { injectable } from "tsyringe";
 import { User } from "../schemas/User"
 
 interface CreateUserDTO {
-    email: String,
-    socket_id: String,
-    avatar: String,
-    name: String,
+    email: string,
+    socket_id: string,
+    avatar: string,
+    name: string,
 }
 
 @injectable()

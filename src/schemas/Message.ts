@@ -1,9 +1,9 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
 type Message = Document & {
-    to: String;
-    text: String;
-    roomId: String;
+    to: string;
+    text: string;
+    roomId: string;
     created_at: Date;
 }
 
