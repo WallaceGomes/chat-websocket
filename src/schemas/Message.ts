@@ -10,7 +10,7 @@ type Message = Document & {
 const MessageSchema = new Schema({
     to: {
         type: Schema.Types.ObjectId,
-        ref: "Messages",
+        ref: "Users",
     },
     text: String,
     roomId: {
