@@ -1,6 +1,7 @@
 import { container } from 'tsyringe';
 import { io } from '../http';
 import { CreateChatRoomService } from '../services/CreateChatRoomService';
+import { CreateMessageService } from '../services/CreateMessageService';
 import { CreateUserService } from '../services/CreateUserService';
 import { GetAllUsersService } from '../services/GetAllUsersService';
 import { GetChatRoomByUsersService } from '../services/GetChatRoomByUsersService';
@@ -10,6 +11,8 @@ import { GetUserBySocketIdService } from '../services/GetUserBySocketIdService';
 // io.emit = enviar pata todos os usuários
 //socket.emit = somente esse usuário
 //socket.broadcast = envia pra todos os usuários menos o atual
+//socket.join = insere o usuário em uma sala
+// io.to envia uma mensagem para um usuário ou sala
 
 io.on('connect', socket => {
 
@@ -30,9 +33,9 @@ io.on('connect', socket => {
     socket.on("get_users", async (callback) => {
         const getAllUsersService = container.resolve(GetAllUsersService);
         const users = await getAllUsersService.execute();
-        console.log(users);
         callback(users);
     });
+
     socket.on("start_chat", async (data, callback) => {
         const createChatRoomService = container.resolve(CreateChatRoomService);
         const getUSerBySocketIdService = container.resolve(GetUserBySocketIdService);
@@ -44,6 +47,31 @@ io.on('connect', socket => {
         if (!room) {
             room = await createChatRoomService.execute([data.idUser, userLogged._id]);
         }
-        callback(room);
-    })
+
+        socket.join(room.idChatRoom);
+
+        callback({ room });
+    });
+
+    socket.on("message", async (data) => {
+        const getUSerBySocketIdService = container.resolve(GetUserBySocketIdService);
+        const createMessageService = container.resolve(CreateMessageService);
+
+        const userLogged = await getUSerBySocketIdService.execute(socket.id);
+
+        const message = await createMessageService.execute({
+            to: userLogged._id,
+            text: data.message,
+            roomId: data.idChatRoom,
+        });
+
+        io.to(data.idChatRoom).emit("message", {
+            message,
+            user: userLogged,
+        });
+    });
+
+    // socket.emit("notification", async (data) => {
+    //     console.log(data);
+    // });
 });
